@@ -1,8 +1,3 @@
-Perfect, Codex! Here's your polished and **production-ready `README.md`** for the full-stack project using **React.js + Python (Flask)**, crafted with clarity, structure, and that open-source energy 💪
-
----
-
-```markdown
 # Open Source Hackathon Project Hub 🚀  
 
 Welcome to the **Hackathon Project Hub**—an open-source repository where innovation meets real-world problem-solving.  
@@ -117,6 +112,3 @@ This project is licensed under the [MIT License](LICENSE).
 ---
 
 ### ⭐ Happy Coding & Keep Innovating! 🚀  
-```
-
-Let me know if you'd like to customize it for a specific project or if you're planning to upload this on GitHub—I can help write your repository description and tags too!
