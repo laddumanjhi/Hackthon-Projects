@@ -1,6 +1,3 @@
-
-
-```markdown
 # Open Source Hackathon Project Hub 🚀  
 
 Welcome to the **Hackathon Project Hub**—an open-source repository where innovation meets real-world problem-solving.  
