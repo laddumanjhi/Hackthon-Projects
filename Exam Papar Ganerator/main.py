@@ -6,34 +6,27 @@ import hashlib
 import secrets
 import google.generativeai as genai
 from datetime import datetime
+from dotenv import load_dotenv
+
+# Load environment variables
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = secrets.token_hex(16)  # For session management
 
 # Configure Gemini API
-GEMINI_API_KEY = "YOUR_GEMINI_API_KEY"  # Replace with your actual API key
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY not found in environment variables")
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-pro')
-
-# Sample question bank (you can expand this with more questions)
-question_bank = {
-    'math': [
-        {'question': 'What is 2 + 2?', 'options': ['3', '4', '5', '6'], 'answer': '4'},
-        {'question': 'What is 5 * 5?', 'options': ['20', '25', '30', '35'], 'answer': '25'},
-        {'question': 'What is 10 / 2?', 'options': ['3', '4', '5', '6'], 'answer': '5'},
-    ],
-    'science': [
-        {'question': 'What is the chemical symbol for water?', 'options': ['H2O', 'CO2', 'O2', 'N2'], 'answer': 'H2O'},
-        {'question': 'What planet is known as the Red Planet?', 'options': ['Venus', 'Mars', 'Jupiter', 'Saturn'], 'answer': 'Mars'},
-    ]
-}
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 # Function to load data from JSON files
 def load_data(filename):
     if os.path.exists(filename):
         with open(filename, 'r') as f:
             return json.load(f)
-    return {"users": []} if filename == "users.json" else {"subjects": []}
+    return {"users": []}
 
 # Function to save data to JSON files
 def save_data(data, filename):
@@ -45,43 +38,16 @@ def hash_password(password):
 
 # Load initial data
 users_data = load_data("users.json")
-subjects_data = load_data("subjects.json")
 
 @app.route('/')
 def home():
-    if 'username' not in session:
-        return redirect(url_for('login'))
-    return render_template('index.html', 
-                         username=session['username'],
-                         subjects=subjects_data.get('subjects', []))
-
-@app.route('/add_subject', methods=['POST'])
-def add_subject():
-    if 'username' not in session:
-        return jsonify({'error': 'Please login first'}), 401
-        
-    data = request.json
-    subject_name = data.get('subject_name')
-    description = data.get('description')
-    
-    if not subject_name:
-        return jsonify({'error': 'Subject name is required'}), 400
-        
-    # Add subject to the list
-    subjects_data['subjects'].append({
-        'name': subject_name,
-        'description': description,
-        'created_by': session['username'],
-        'created_at': datetime.now().isoformat()
-    })
-    
-    save_data(subjects_data, "subjects.json")
-    return jsonify({'message': 'Subject added successfully'})
+    return render_template('index.html')  # Directly render index.html
 
 @app.route('/generate_questions', methods=['POST'])
 def generate_questions():
-    if 'username' not in session:
-        return jsonify({'error': 'Please login first'}), 401
+    # Remove the login check
+    # if 'username' not in session:
+    #     return jsonify({'error': 'Please login first'}), 401
         
     data = request.json
     subject = data.get('subject')
@@ -92,74 +58,76 @@ def generate_questions():
         return jsonify({'error': 'Subject is required'}), 400
     
     # Generate questions using Gemini API
-    prompt = f"""
-    Generate {num_questions} {difficulty} difficulty level questions for the subject {subject}.
-    Each question should have:
-    1. A clear question text
-    2. 4 multiple choice options
-    3. The correct answer
-    
-    Format the response as a JSON array where each question has:
-    - question: the question text
-    - options: array of 4 options
-    - answer: the correct answer
-    
-    Example format:
+    prompt = f"""You are a question generator. Generate exactly {num_questions} {difficulty} difficulty level questions for {subject}.
+    Each question must follow this exact JSON format:
+    {{
+        "question": "The question text here",
+        "options": ["Option A", "Option B", "Option C", "Option D"],
+        "answer": "The correct option letter (A, B, C, or D)"
+    }}
+
+    Return the questions as a JSON array. Do not include any other text or explanation.
+    Example response:
     [
         {{
-            "question": "What is...?",
-            "options": ["A", "B", "C", "D"],
-            "answer": "A"
+            "question": "What is 2+2?",
+            "options": ["3", "4", "5", "6"],
+            "answer": "B"
+        }},
+        {{
+            "question": "What is 5*5?",
+            "options": ["20", "25", "30", "35"],
+            "answer": "B"
         }}
     ]
+
+    Remember:
+    1. Return ONLY the JSON array
+    2. Each question must have exactly 4 options
+    3. The answer must be one of: A, B, C, or D
+    4. Do not include any other text or explanation
     """
     
     try:
         response = model.generate_content(prompt)
-        questions = json.loads(response.text)
-        return jsonify({'questions': questions})
+        # Get the text content from the response
+        response_text = response.text.strip()
+        print("Raw API Response:", response_text)  # Debug print
+        
+        # Try to parse the response as JSON
+        try:
+            # Find the first [ and last ] to extract just the JSON array
+            start = response_text.find('[')
+            end = response_text.rfind(']') + 1
+            if start == -1 or end == 0:
+                raise ValueError("No JSON array found in response")
+            
+            json_text = response_text[start:end]
+            print("Extracted JSON:", json_text)  # Debug print
+            
+            questions = json.loads(json_text)
+            # Validate the structure
+            if not isinstance(questions, list):
+                raise ValueError("Response is not a list")
+            for q in questions:
+                if not all(key in q for key in ['question', 'options', 'answer']):
+                    raise ValueError("Invalid question structure")
+                if not isinstance(q['options'], list) or len(q['options']) != 4:
+                    raise ValueError("Invalid options structure")
+                if q['answer'] not in ['A', 'B', 'C', 'D']:
+                    raise ValueError("Answer must be A, B, C, or D")
+            
+            return jsonify({'questions': questions})
+        except json.JSONDecodeError as e:
+            print("JSON Parse Error:", str(e))  # Debug print
+            return jsonify({'error': f'Invalid JSON response from AI: {str(e)}', 'raw_response': response_text}), 500
+        except ValueError as e:
+            print("Validation Error:", str(e))  # Debug print
+            return jsonify({'error': f'Invalid response structure: {str(e)}', 'raw_response': response_text}), 500
+            
     except Exception as e:
+        print("General Error:", str(e))  # Debug print
         return jsonify({'error': f'Failed to generate questions: {str(e)}'}), 500
-
-@app.route('/login', methods=['GET', 'POST'])
-def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        
-        users_data = load_data("users.json")
-        for user in users_data['users']:
-            if user['username'] == username and user['password'] == hash_password(password):
-                session['username'] = username
-                return redirect(url_for('home'))
-        
-        return render_template('login.html', error='Invalid username or password')
-    return render_template('login.html')
-
-@app.route('/signup', methods=['GET', 'POST'])
-def signup():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        email = request.form.get('email')
-        
-        users_data = load_data("users.json")
-        
-        # Check if username already exists
-        for user in users_data['users']:
-            if user['username'] == username:
-                return render_template('signup.html', error='Username already exists')
-        
-        # Add new user
-        users_data['users'].append({
-            'username': username,
-            'password': hash_password(password),
-            'email': email
-        })
-        
-        save_data(users_data, "users.json")
-        return redirect(url_for('login'))
-    return render_template('signup.html')
 
 @app.route('/forgot_password', methods=['GET', 'POST'])
 def forgot_password():
@@ -179,25 +147,17 @@ def forgot_password():
 
 @app.route('/logout')
 def logout():
-    session.pop('username', None)
-    return redirect(url_for('login'))
+    # Commenting out the logout functionality
+    # session.pop('username', None)
+    # return redirect(url_for('login'))
+    return redirect(url_for('home'))  # Redirect to home instead
 
-@app.route('/generate_paper', methods=['POST'])
-def generate_paper():
-    if 'username' not in session:
-        return jsonify({'error': 'Please login first'}), 401
-        
-    data = request.json
-    subject = data.get('subject', 'math')
-    num_questions = int(data.get('num_questions', 5))
-    
-    # Get questions for the selected subject
-    subject_questions = question_bank.get(subject, [])
-    
-    # Randomly select questions
-    selected_questions = random.sample(subject_questions, min(num_questions, len(subject_questions)))
-    
-    return jsonify({'questions': selected_questions})
+def save_user_data(data):
+    with open('user.json', 'r+') as file:
+        users = json.load(file)
+        users.append(data)
+        file.seek(0)
+        json.dump(users, file)
 
 if __name__ == '__main__':
     app.run(debug=True)

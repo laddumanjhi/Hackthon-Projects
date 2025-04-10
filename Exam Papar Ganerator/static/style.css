@@ -119,4 +119,14 @@ button:hover {
 .option label {
     font-weight: normal;
     cursor: pointer;
+}
+
+.honeycomb div {
+    -webkit-animation: honeycomb 2.1s infinite backwards;
+    animation: honeycomb 2.1s infinite backwards;
+    background: #f3f3f3;
+    height: 12px;
+    margin-top: 6px;
+    position: absolute;
+    width: 24px;
 } 
