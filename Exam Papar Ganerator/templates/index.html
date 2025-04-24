@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Exam Paper Generator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .welcome {
+            font-size: 1.2em;
+            color: #333;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .logout-btn:hover {
+            background-color: #d32f2f;
+        }
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+        h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #555;
+        }
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .questions-container {
+            margin-top: 20px;
+        }
+        .question {
+            background-color: white;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .options {
+            margin-left: 20px;
+        }
+        .correct-answer {
+            color: #4CAF50;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        /* From Uiverse.io by boryanakrasteva */
+        @-webkit-keyframes honeycomb {
+            0%, 20%, 80%, 100% {
+                opacity: 0;
+                -webkit-transform: scale(0);
+                transform: scale(0);
+            }
+            30%, 70% {
+                opacity: 1;
+                -webkit-transform: scale(1);
+                transform: scale(1);
+            }
+        }
+
+        @keyframes honeycomb {
+            0%, 20%, 80%, 100% {
+                opacity: 0;
+                -webkit-transform: scale(0);
+                transform: scale(0);
+            }
+            30%, 70% {
+                opacity: 1;
+                -webkit-transform: scale(1);
+                transform: scale(1);
+            }
+        }
+
+        .honeycomb {
+            height: 24px;
+            position: relative;
+            width: 24px;
+            display: none; /* Hidden by default */
+            margin: auto; /* Center the honeycomb */
+        }
+
+        .honeycomb div {
+            -webkit-animation: honeycomb 2.1s infinite backwards;
+            animation: honeycomb 2.1s infinite backwards;
+            background: #007BFF;
+            height: 12px;
+            margin-top: 6px;
+            position: absolute;
+            width: 24px;
+        }
+
+        .honeycomb div:after, .honeycomb div:before {
+            content: '';
+            border-left: 12px solid transparent;
+            border-right: 12px solid transparent;
+            position: absolute;
+            left: 0;
+            right: 0;
+        }
+
+        .honeycomb div:after {
+            top: -6px;
+            border-bottom: 6px solid #007BFF;
+        }
+
+        .honeycomb div:before {
+            bottom: -6px;
+            border-top: 6px solid #007BFF;
+        }
+
+        .honeycomb div:nth-child(1) { -webkit-animation-delay: 0s; animation-delay: 0s; left: -28px; top: 0; }
+        .honeycomb div:nth-child(2) { -webkit-animation-delay: 0.1s; animation-delay: 0.1s; left: -14px; top: 22px; }
+        .honeycomb div:nth-child(3) { -webkit-animation-delay: 0.2s; animation-delay: 0.2s; left: 14px; top: 22px; }
+        .honeycomb div:nth-child(4) { -webkit-animation-delay: 0.3s; animation-delay: 0.3s; left: 28px; top: 0; }
+        .honeycomb div:nth-child(5) { -webkit-animation-delay: 0.4s; animation-delay: 0.4s; left: 14px; top: -22px; }
+        .honeycomb div:nth-child(6) { -webkit-animation-delay: 0.5s; animation-delay: 0.5s; left: -14px; top: -22px; }
+        .honeycomb div:nth-child(7) { -webkit-animation-delay: 0.6s; animation-delay: 0.6s; left: 0; top: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="welcome">Welcome, {{ username }}!</div>
+            <a href="{{ url_for('logout') }}" class="logout-btn">Logout</a>
+        </div>
+
+        <div class="section">
+            <h2>Generate Questions</h2>
+            <form id="generateQuestionsForm">
+                <div class="form-group">
+                    <label for="subject">Enter Subject:</label>
+                    <input type="text" id="subject" name="subject" placeholder="e.g., Mathematics, Physics, Chemistry" required>
+                </div>
+                <div class="form-group">
+                    <label for="num_questions">Number of Questions:</label>
+                    <input type="number" id="num_questions" name="num_questions" min="1" max="20" value="5" required>
+                </div>
+                <div class="form-group">
+                    <label for="difficulty">Difficulty Level:</label>
+                    <select id="difficulty" name="difficulty">
+                        <option value="easy">Easy</option>
+                        <option value="medium" selected>Medium</option>
+                        <option value="hard">Hard</option>
+                    </select>
+                </div>
+                <button type="submit">Generate Questions</button>
+            </form>
+            <div class="questions-container" id="questionsContainer"></div>
+            <div class="honeycomb" id="loadingSpinner">
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Generate Questions Form Handler
+        document.getElementById('generateQuestionsForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = {
+                subject: document.getElementById('subject').value,
+                num_questions: document.getElementById('num_questions').value,
+                difficulty: document.getElementById('difficulty').value
+            };
+
+            // Show the honeycomb loading animation
+            document.getElementById('loadingSpinner').style.display = 'block';
+            
+            try {
+                const response = await fetch('/generate_questions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    displayQuestions(data.questions);
+                } else {
+                    alert(data.error || 'Failed to generate questions');
+                }
+            } catch (error) {
+                alert('Error generating questions');
+            } finally {
+                // Hide the loading spinner after the request is complete
+                document.getElementById('loadingSpinner').style.display = 'none';
+            }
+        });
+
+        function displayQuestions(questions) {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            questions.forEach((q, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question';
+                questionDiv.innerHTML = `
+                    <h3>Question ${index + 1}:</h3>
+                    <p>${q.question}</p>
+                    <div class="options">
+                        ${q.options.map((opt, i) => `
+                            <div>${String.fromCharCode(65 + i)}. ${opt}</div>
+                        `).join('')}
+                    </div>
+                    <div class="correct-answer">Correct Answer: ${q.answer}</div>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+    </script>
+</body>
+</html> 
