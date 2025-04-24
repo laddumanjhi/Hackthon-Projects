@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam Paper Converter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Exam Paper Converter</h1>
+            <p>Transform your exam papers with AI-powered conversion and understanding</p>
+        </header>
+
+        <main>
+            <div class="input-section">
+                <textarea id="input-text" placeholder="Paste your exam paper here..."></textarea>
+                
+                <div class="controls">
+                    <div class="mode-selector">
+                        <button class="mode-btn active" data-mode="convert">Convert</button>
+                        <button class="mode-btn" data-mode="understand">Understand</button>
+                    </div>
+
+                    <div class="difficulty-selector">
+                        <select id="difficulty">
+                            <option value="easy">Easy</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+
+                    <button id="convert-btn" class="primary-btn">Process Paper</button>
+                </div>
+            </div>
+
+            <div class="output-section">
+                <h2>Result</h2>
+                <div id="output-text" class="output-box">
+                    <p class="placeholder">Your converted paper will appear here...</p>
+                </div>
+            </div>
+        </main>
+
+        <div id="loading" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Processing your paper...</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const inputText = document.getElementById('input-text');
+            const outputText = document.getElementById('output-text');
+            const convertBtn = document.getElementById('convert-btn');
+            const difficultySelect = document.getElementById('difficulty');
+            const loading = document.getElementById('loading');
+            const modeBtns = document.querySelectorAll('.mode-btn');
+
+            let currentMode = 'convert';
+
+            modeBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    modeBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentMode = btn.dataset.mode;
+                });
+            });
+
+            convertBtn.addEventListener('click', async () => {
+                const text = inputText.value.trim();
+                if (!text) {
+                    alert('Please enter some text to process');
+                    return;
+                }
+
+                loading.classList.remove('hidden');
+                convertBtn.disabled = true;
+
+                try {
+                    const response = await fetch('/convert', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            text: text,
+                            difficulty: difficultySelect.value,
+                            mode: currentMode
+                        })
+                    });
+
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        outputText.innerHTML = data.result.replace(/\n/g, '<br>');
+                    } else {
+                        outputText.innerHTML = `<p class="error">Error: ${data.error}</p>`;
+                    }
+                } catch (error) {
+                    outputText.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+                } finally {
+                    loading.classList.add('hidden');
+                    convertBtn.disabled = false;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

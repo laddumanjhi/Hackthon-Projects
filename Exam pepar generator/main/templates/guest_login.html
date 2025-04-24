@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guest Login</title>
+    <script>
+        async function loginAsGuest() {
+            const response = await fetch('/login_guest', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({})
+            });
+
+            const data = await response.json();
+            alert(data.message); // Show the response message
+        }
+    </script>
+</head>
+<body>
+    <h1>Welcome to Our Application</h1>
+    <button onclick="loginAsGuest()">Login as Guest</button>
+</body>
+</html>

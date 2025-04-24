@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login UI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        .left-section {
+            width: 40%;
+            background: linear-gradient(to bottom right, #4299e1, #2b6cb0);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .profile {
+            width: 100px;
+            height: 100px;
+            background: black;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            z-index: 2;
+        }
+        .profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .profile::before {
+            content: "";
+            background: url('https://cdn-icons-png.flaticon.com/512/149/149071.png') no-repeat center;
+            background-size: cover;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        .upload-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: black;
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid white;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+        .upload-btn::before {
+            content: "+";
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+        .right-section {
+            width: 60%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Lobster', cursive;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        a {
+            display: block;
+            text-align: right;
+            margin-top: 10px;
+            color: #4299e1;
+            text-decoration: none;
+        }
+        h1 {
+            font-family: 'Lobster', cursive;
+            z-index: 2;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-section">
+        <h1>Welcome</h1>
+        <div class="profile" id="profileContainer">
+            <img id="profileImage" src="" alt="Profile">
+            <input type="file" id="fileInput" accept="image/*" capture="camera" style="display: none;">
+            <span class="upload-btn" onclick="document.getElementById('fileInput').click();"></span>
+        </div>
+    </div>
+    <div class="right-section">
+        <h2>Log in to start learning</h2>
+        <div class="form-container">
+            <label>Twitter handle</label>
+            <input type="text" placeholder="@username">
+            <label>Password</label>
+            <input type="password" placeholder="••••••••">
+            <a href="#">Forgot password?</a>
+            <button>Log in →</button>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImage').src = e.target.result;
+                    document.getElementById('profileContainer').style.background = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+    </script>
+</body>
+</html>

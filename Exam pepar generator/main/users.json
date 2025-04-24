@@ -1,0 +1,6 @@
+{
+    "name": "NewUser",
+    "email": "newuser@example.com",
+    "password": "32768:8:1$UZ5q9cNYk3Foskjt$10c052f07ee4f7dc78622abe3bc541aa10fb78f5262d43167cff03492215345ef04fa0b83dac212a03c498915c11992a356fbcbf6144b0473ab8fdcf2f3fc809",
+    "education_level": "Master's Degree"  
+}

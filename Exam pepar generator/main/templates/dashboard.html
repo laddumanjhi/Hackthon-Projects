@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - Exam Question Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        /* General Styling */
+        body {
+            background: linear-gradient(to bottom, #000000, #000033);
+            color: #EAEAEA;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        nav.top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #021526;
+            color: #FFFFFF;
+            padding: 10px 20px;
+            border-radius: 8px;
+        }
+
+        nav .user-info {
+            font-size: 16px;
+        }
+
+        nav .nav-links a {
+            color: #FFD700;
+            text-decoration: none;
+            margin-left: 15px;
+            font-size: 14px;
+            transition: color 0.3s ease;
+        }
+
+        nav .nav-links a:hover {
+            color: #FFFFFF;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 30px auto;
+        }
+
+        h1 {
+            color: #FFD700;
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        h2 {
+            color: #EAEAEA;
+            margin-bottom: 20px;
+        }
+
+        .tasks-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        .task-card {
+            background-color: #2C3E50;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            color: #FFFFFF;
+            cursor: pointer;
+            text-align: center;
+            transition: transform 0.3s ease, background-color 0.3s ease;
+        }
+
+        .task-card:hover {
+            background-color: #04384C;
+            transform: scale(1.05);
+        }
+
+        .task-card h3 {
+            font-size: 18px;
+            margin-bottom: 10px;
+            color: #FFD700;
+        }
+
+        .task-card p {
+            font-size: 14px;
+            color: #EAEAEA;
+        }
+
+        /* Loading Animation */
+        .loading-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .dots-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 5px solid transparent;
+            border-top: 5px solid #FFD700;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="loading-container" id="loading">
+        <div class="dots-circle"></div>
+    </div>
+
+    <div class="container">
+        <nav class="top-nav">
+            <div class="user-info">
+                Welcome, {{ current_user.name }}
+            </div>
+            <div class="nav-links">
+                <a href="#" id="logoutBtn">Logout</a>
+            </div>
+        </nav>
+
+        <div class="dashboard-container">
+            <h1>Welcome, {{ current_user.name }}!</h1>
+            <h2>What would you like to do today?</h2>
+
+            <div class="tasks-grid">
+                {% for task in tasks %}
+                <div class="task-card" onclick="selectTask('{{ task.id }}')">
+                    <h3>{{ task.title }}</h3>
+                    <p>{{ task.description }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/tasks.js') }}"></script>
+    <script>
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/logout');
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                alert('Error logging out');
+            }
+        });
+
+        function selectTask(taskId) {
+            sessionStorage.setItem('loading', 'true');
+            document.getElementById('loading').style.display = 'flex';
+            setTimeout(() => {
+                switch(taskId) {
+                    case 'generate_exam_questions':
+                        window.location.href = '/generate_exam_questions';
+                        break;
+                    case 'generate_exam_paper':
+                        window.location.href = '/generate_exam_paper';
+                        break;
+                    case 'get_syllabus':
+                        window.location.href = '/get_syllabus';
+                        break;
+                    case 'important_questions':
+                        window.location.href = '/important_questions';
+                        break;
+                    case 'study_package':
+                        window.location.href = '/generate_study_package';
+                        break;
+                    default:
+                        console.error('Unknown task ID:', taskId);
+                }
+            }, 1000);
+        }
+
+        window.addEventListener('pageshow', function(event) {
+            if (sessionStorage.getItem('loading') === 'true') {
+                document.getElementById('loading').style.display = 'none';
+                sessionStorage.removeItem('loading');
+            }
+        });
+    </script>
+</body>
+</html>

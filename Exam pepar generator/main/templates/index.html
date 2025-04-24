@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Exam Question Generator</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Lobster&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #000000; /* Primary Color: Near-black */
+        }
+        .left-section {
+            width: 40%;
+            background: linear-gradient(to bottom right, #000000, #1A1A2E); /* Gradient from black to dark blue */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        .profile {
+            width: 100px;
+            height: 100px;
+            background: black;
+            border-radius: 50%;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid white;
+            z-index: 2;
+        }
+        .profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        .profile::before {
+            content: "";
+            background: url('https://cdn-icons-png.flaticon.com/512/149/149071.png') no-repeat center;
+            background-size: cover;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        .upload-btn {
+            position: absolute;
+            bottom: 5px;
+            right: 5px;
+            background: #1A1A2E; /* Secondary Color: Mid-tone grayish-blue */
+            color: white;
+            border-radius: 50%;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid white;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 3;
+        }
+        .upload-btn::before {
+            content: "+";
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+        }
+        .right-section {
+            width: 60%;
+            background: #1A1A2E; /* Secondary Color: Mid-tone grayish-blue */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            font-family: 'Lobster', cursive;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background: #1A1A2E; /* Accent Color: Dark blue */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #162447; /* Darker shade for hover effect */
+        }
+        a {
+            display: block;
+            text-align: right;
+            margin-top: 10px;
+            color: white;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        h1 {
+            font-family: 'Lobster', cursive;
+            z-index: 2;
+            margin-bottom: 10px;
+        }
+        .toggle-form {
+            margin-top: 20px;
+            cursor: pointer;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="left-section">
+        <h1>Welcome To the Exam Preparation Web</h1>
+        <div class="profile" id="profileContainer">
+            <img id="profileImage" src="" alt="Profile">
+            <input type="file" id="fileInput" accept="image/*" capture="camera" style="display: none;">
+            <span class="upload-btn" onclick="document.getElementById('fileInput').click();"></span>
+        </div>
+    </div>
+    <div class="right-section">
+        <h2 id="formTitle">Log in to start learning</h2>
+        <div class="form-container" id="loginFormContainer">
+            <label>Email</label>
+            <input type="email" id="email" placeholder="you@example.com" required>
+            <label>Password</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+            <a href="#" id="forgotPasswordLink">Forgot password?</a>
+            <button id="loginButton">Log in →</button>
+            <button id="guestLoginButton">Login as Guest →</button>
+            <div class="toggle-form" id="toggleToSignup">Don't have an account? Sign up here</div>
+        </div>
+
+        <div class="form-container" id="signupFormContainer" style="display: none;">
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name" required>
+
+            <label for="email">Email:</label>
+            <input type="email" id="signupEmail" name="email" required>
+
+            <label for="password">Password:</label>
+            <input type="password" id="signupPassword" name="password" required>
+
+            <label>Confirm Password</label>
+            <input type="password" id="confirmPassword" placeholder="••••••••" required>
+
+            <label for="educationLevel">Education Level:</label>
+            <input type="text" id="educationLevel" name="educationLevel" required>
+
+            <button id="signupButton">Sign up →</button>
+            <div class="toggle-form" id="toggleToLogin">Already have an account? Log in here</div>
+        </div>
+    </div>
+    <div id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <script>
+        // Add CSS for the spinner
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .spinner {
+                border: 8px solid #f3f3f3; /* Light grey */
+                border-top: 8px solid #3498db; /* Blue */
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                animation: spin 1s linear infinite;
+            }
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('profileImage').src = e.target.result;
+                    document.getElementById('profileContainer').style.background = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('loginButton').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            // New check for empty fields
+            if (!email || !password) {
+                alert("Please enter both email and password.");
+                return;
+            }
+
+            document.getElementById('loadingSpinner').style.display = 'block'; // Show loading spinner
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    window.location.href = '/dashboard';
+                } else {
+                    alert(data.error || "Login failed. Please try again."); // Improved error handling
+                }
+            } catch (error) {
+                alert('An error occurred during login: ' + error.message);
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none'; // Hide loading spinner
+            }
+        });
+
+        document.getElementById('signupButton').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('signupEmail').value;
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const educationLevel = document.getElementById('educationLevel').value;
+
+            // New check for empty fields
+            if (!name || !email || !password || !confirmPassword || !educationLevel) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert("Passwords do not match!");
+                return;
+            }
+
+            document.getElementById('loadingSpinner').style.display = 'block'; // Show loading spinner
+            try {
+                const response = await fetch('/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        education_level: educationLevel
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert("Signup successful! You can now log in.");
+                    document.getElementById('toggleToLogin').click(); // Switch to login form
+                } else {
+                    alert(data.error || "Signup failed. Please try again."); // Improved error handling
+                }
+            } catch (error) {
+                alert('An error occurred during signup: ' + error.message); // Display error message
+            } finally {
+                document.getElementById('loadingSpinner').style.display = 'none'; // Hide loading spinner
+            }
+        });
+
+        document.getElementById('toggleToSignup').addEventListener('click', () => {
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('signupFormContainer').style.display = 'block';
+            document.getElementById('formTitle').innerText = 'Sign up to start learning';
+        });
+
+        document.getElementById('toggleToLogin').addEventListener('click', () => {
+            document.getElementById('signupFormContainer').style.display = 'none';
+            document.getElementById('loginFormContainer').style.display = 'block';
+            document.getElementById('formTitle').innerText = 'Log in to start learning';
+        });
+
+        document.getElementById('forgotPasswordLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value; // Get email from login form
+            if (!email) {
+                alert("Please enter your email address.");
+                return;
+            }
+            try {
+                const response = await fetch('/forgot-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    alert("Password reset link sent to your email.");
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('An error occurred while sending the password reset link.');
+            }
+        });
+
+        document.getElementById('guestLoginButton').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const guestName = prompt("Please enter your name:");
+            if (guestName) {
+                console.log("Guest Name:", guestName); // Log the guest name
+                // Redirect to dashboard with guest name
+                window.location.href = '/dashboard?guestName=' + encodeURIComponent(guestName);
+            } else {
+                alert("Name is required to log in as a guest.");
+            }
+        });
+    </script>
+</body>
+</html> 
